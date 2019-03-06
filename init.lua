@@ -9,8 +9,24 @@ local modNone  = {""}
 local modAlt   = {"⌥"}
 local modCmd   = {"⌘"}
 local modShift = {"⇧"}
-local modHyper = {"⌘", "⌥", "⌃", "⇧"}
+local modHyper = {"⌘", "⌥", "⌃"}
+local modShiftHyper = {"⌘", "⌥", "⌃", "⇧"}
 
+--test modal
+k = hs.hotkey.modal.new({"cmd", "shift"}, "d")
+function k:entered() hs.alert.show('Entered mode') end
+function k:exited()  hs.alert.show('Exited mode')  end
+k:bind({}, 'escape', function() k:exit() end)
+k:bind({}, 'J', function() hs.alert.show("Pressed J") end)
+
+-- Load Seal - This is a pretty simple implementation of something like Alfred
+hs.loadSpoon("SpoonInstall")
+spoon.SpoonInstall.use_syncinstall = true
+
+spoon.SpoonInstall:andUse("Seal")
+spoon.Seal:loadPlugins({"apps"})
+spoon.Seal:bindHotkeys({show={{"cmd"}, "Space"}})
+spoon.Seal:start()
 
 -- cmd-tab replacement
 currentlyActiveAppObj = nil
@@ -30,6 +46,14 @@ end
 
 function applicationWatcher(appName, eventType, appObject)
   if (eventType == hs.application.watcher.activated) then
+    if(previouslyActiveAppObj ~= nil and currentlyActiveAppObj ~= nil) then
+        print(" ")
+        print("previouslyActiveAppObj=" .. previouslyActiveAppObj:name())
+        print("currentlyActiveAppObj=" .. currentlyActiveAppObj:name())
+        print("appObject=" .. appObject:name())
+        print("Shifting... ")
+        print(" ")
+    end
     previouslyActiveAppObj = currentlyActiveAppObj
     currentlyActiveAppObj = appObject
   end
@@ -55,18 +79,20 @@ function keyDownHandler(keyDownEvent)
 
 end
 
-local key_tap = hs.eventtap.new(
-  {hs.eventtap.event.types.keyUp, hs.eventtap.event.types.keyDown},
-  keyDownHandler
-)
+-- local key_tap = hs.eventtap.new(
+--   {hs.eventtap.event.types.keyUp, hs.eventtap.event.types.keyDown},
+--   keyDownHandler
+-- )
 -- key_tap:start()
 
 
-hs.urlevent.bind("cmdTab", function(eventName, params)
-    if(previouslyActiveAppObj ~= nil) then
-        previouslyActiveAppObj:activate()
-        hs.alert("Boom")
-    end
-end)
+-- hs.urlevent.bind("cmdTab", function(eventName, params)
+--     print("url binding start")
+--     if(previouslyActiveAppObj ~= nil) then
+--         previouslyActiveAppObj:activate()
+--         hs.alert("Boom")
+--     end
+--     print("url binding end")
+-- end)
 
-
+hs.notify.new( {title='Hammerspoon', subTitle='Configuration loaded'} ):send()
