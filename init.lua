@@ -1,10 +1,12 @@
+hs.logger.defaultLogLevel="info"
+
 -- Misc setup
 hs.window.animationDuration = 0
 local vw = hs.inspect.inspect
 local configFileWatcher = nil
 local appWatcher = nil
 
--- Keyboard modifiers, Capslock bound to cmd+alt+ctrl+shift via Seil and Karabiner
+-- Keyboard modifiers, Capslock bound to escape when a single keyup/down, but used as a modifier cmd+alt+ctrl (via Karabiner Elements)
 local modNone  = {""}
 local modAlt   = {"⌥"}
 local modCmd   = {"⌘"}
@@ -12,18 +14,14 @@ local modShift = {"⇧"}
 local modHyper = {"⌘", "⌥", "⌃"}
 local modShiftHyper = {"⌘", "⌥", "⌃", "⇧"}
 
---test modal
-k = hs.hotkey.modal.new({"cmd", "shift"}, "d")
-function k:entered() hs.alert.show('Entered mode') end
-function k:exited()  hs.alert.show('Exited mode')  end
-k:bind({}, 'escape', function() k:exit() end)
-k:bind({}, 'J', function() hs.alert.show("Pressed J") end)
 
--- Load Seal - This is a pretty simple implementation of something like Alfred
+-- Load InstallSpoon and use it to load all the other spoons
 hs.loadSpoon("SpoonInstall")
 spoon.SpoonInstall.use_syncinstall = true
+Install=spoon.SpoonInstall
 
-spoon.SpoonInstall:andUse("Seal")
+-- Load Seal - This is a pretty simple implementation of something like Alfred
+Install:andUse("Seal")
 spoon.Seal:loadPlugins({"apps"})
 spoon.Seal:bindHotkeys({show={{"cmd"}, "Space"}})
 spoon.Seal:start()
@@ -32,28 +30,16 @@ spoon.Seal:start()
 currentlyActiveAppObj = nil
 previouslyActiveAppObj = nil
 
-function betterLaunchOrFocus(appName)
-   local app = hs.appfinder.appFromName(appName)
-   if app == nil then
-      hs.application.launchOrFocus(appName)
-   else
-      windows = app:allWindows()
-      if windows[1] then
-         windows[1]:focus()
-      end
-   end
-end
-
 function applicationWatcher(appName, eventType, appObject)
   if (eventType == hs.application.watcher.activated) then
-    if(previouslyActiveAppObj ~= nil and currentlyActiveAppObj ~= nil) then
-        print(" ")
-        print("previouslyActiveAppObj=" .. previouslyActiveAppObj:name())
-        print("currentlyActiveAppObj=" .. currentlyActiveAppObj:name())
-        print("appObject=" .. appObject:name())
-        print("Shifting... ")
-        print(" ")
-    end
+    -- if(previouslyActiveAppObj ~= nil and currentlyActiveAppObj ~= nil) then
+    --     print(" ")
+    --     print("previouslyActiveAppObj=" .. previouslyActiveAppObj:name())
+    --     print("currentlyActiveAppObj=" .. currentlyActiveAppObj:name())
+        print("application watcher: appObject=" .. appObject:name())
+    --     print("Shifting... ")
+    --     print(" ")
+    -- end
     previouslyActiveAppObj = currentlyActiveAppObj
     currentlyActiveAppObj = appObject
   end
@@ -61,38 +47,77 @@ end
 appWatcher = hs.application.watcher.new(applicationWatcher)
 appWatcher:start()
 
--- hs.hotkey.bind(modCmd, 'tab', function() 
---     previouslyActiveAppObj:activate()
--- end)
-
-function keyDownHandler(keyDownEvent)
-    local flags = keyDownEvent:getFlags()
-    local keyCode = keyDownEvent:getKeyCode()
-
-    if(flags.cmd and keyCode == 48) then
-        if(previouslyActiveAppObj ~= nil) then
-            -- previouslyActiveAppObj:activate()
-            hs.alert("Boom")
-        end
-        return false
+-- this is actually bound to cmd-tab in BTT
+hs.hotkey.bind(modAlt, 'tab', function() 
+    if(previouslyActiveAppObj ~= nil) then
+        previouslyActiveAppObj:activate()
     end
+end)
 
+--clipboard history (only text)
+Install:andUse("TextClipboardHistory", {
+    disable = false,
+    config = {
+        show_in_menubar = false,
+    },
+    hotkeys = {
+        toggle_clipboard = { modHyper, "v" } 
+    },
+    start = true,
+})
+
+----not working yet
+----emoji
+--Install:andUse("Emojis", {
+--    disable = false,
+--    config = {
+--        show_in_menubar = false,
+--    },
+--    hotkeys = {
+--        toggle = { modShiftHyper, "e" } 
+--    },
+--})
+
+-- -- NOT WORKING YET
+-- -- keyboard shortcut cheatsheet creator
+-- Install:andUse("KSheet")
+-- hs.hotkey.bind(modHyper, '/', function() 
+--     KSheet:show()
+-- end)
+--
+--
+
+
+-- modal window control
+local screenMode = hs.hotkey.modal.new(modHyper, 'w')
+
+function screenMode:entered()
+    alertUuids = hs.fnutils.imap(hs.screen.allScreens(), function(screen)
+       return hs.alert.show('Move Window', hs.alert.defaultStyle, screen, true)
+    end)
 end
 
--- local key_tap = hs.eventtap.new(
---   {hs.eventtap.event.types.keyUp, hs.eventtap.event.types.keyDown},
---   keyDownHandler
--- )
--- key_tap:start()
+function screenMode:exited()
+    hs.fnutils.ieach(alertUuids, function(uuid)
+        hs.alert.closeSpecific(uuid)
+    end)
+end
+
+grid = {
+    { key='h', unit=hs.geometry.rect(0, 0, 0.6, 1) },
+    { key='l', unit=hs.geometry.rect(0.6, 0, 0.4, 1) },
+    { key='m', unit=hs.layout.maximized },
+}
+
+hs.fnutils.each(grid, function(entry)
+   screenMode:bind('', entry.key, function()
+        hs.window.focusedWindow():moveToUnit(entry.unit)
+        screenMode:exit()
+    end)
+end)
+
+screenMode:bind('', 'escape', function() screenMode:exit() end)
 
 
--- hs.urlevent.bind("cmdTab", function(eventName, params)
---     print("url binding start")
---     if(previouslyActiveAppObj ~= nil) then
---         previouslyActiveAppObj:activate()
---         hs.alert("Boom")
---     end
---     print("url binding end")
--- end)
-
+-- let me know when you're done loading all this stuff
 hs.notify.new( {title='Hammerspoon', subTitle='Configuration loaded'} ):send()
