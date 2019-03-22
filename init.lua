@@ -107,13 +107,13 @@ function screenMode:exited()
     end)
 end
 
-grid = {
+windowKeyList = {
     { key='h', unit=hs.geometry.rect(0, 0, 0.6, 1) },
     { key='l', unit=hs.geometry.rect(0.6, 0, 0.4, 1) },
     { key='m', unit=hs.layout.maximized },
 }
 
-hs.fnutils.each(grid, function(entry)
+hs.fnutils.each(windowKeyList, function(entry)
    screenMode:bind('', entry.key, function()
         hs.window.focusedWindow():moveToUnit(entry.unit)
         screenMode:exit()
@@ -122,6 +122,38 @@ end)
 
 screenMode:bind('', 'escape', function() screenMode:exit() end)
 
+
+-- modal finder window access
+local finderMode = hs.hotkey.modal.new(modHyper, 'f')
+
+function finderMode:entered()
+    alertUuids = hs.fnutils.imap(hs.screen.allScreens(), function(screen)
+       return hs.alert.show('Select Directory', hs.alert.defaultStyle, screen, true)
+    end)
+end
+
+function finderMode:exited()
+    hs.fnutils.ieach(alertUuids, function(uuid)
+        hs.alert.closeSpecific(uuid)
+    end)
+end
+
+finderKeyList = {
+    { key='d', dir="/Users/kyounger/Desktop" },
+    { key='j', dir="/Users/kyounger/Downloads" },
+    { key='a', dir="/Applications" },
+}
+
+hs.fnutils.each(finderKeyList, function(entry)
+   finderMode:bind('', entry.key, function()
+        local applescript = 'tell application "Finder"\n' .. 'open ("' .. entry.dir .. '" as POSIX file) activate\nend tell'
+        -- print(applescript)
+        hs.applescript(applescript)
+        finderMode:exit()
+    end)
+end)
+
+finderMode:bind('', 'escape', function() finderMode:exit() end)
 
 -- let me know when you're done loading all this stuff
 hs.notify.new( {title='Hammerspoon', subTitle='Configuration loaded'} ):send()
