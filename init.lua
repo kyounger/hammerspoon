@@ -32,16 +32,20 @@ previouslyActiveAppObj = nil
 
 function applicationWatcher(appName, eventType, appObject)
   if (eventType == hs.application.watcher.activated) then
-    -- if(previouslyActiveAppObj ~= nil and currentlyActiveAppObj ~= nil) then
-    --     print(" ")
-    --     print("previouslyActiveAppObj=" .. previouslyActiveAppObj:name())
-    --     print("currentlyActiveAppObj=" .. currentlyActiveAppObj:name())
-        print("application watcher: appObject=" .. appObject:name())
-    --     print("Shifting... ")
-    --     print(" ")
-    -- end
-    previouslyActiveAppObj = currentlyActiveAppObj
-    currentlyActiveAppObj = appObject
+    print("application watcher: appObject=" .. appObject:name())
+
+    if(previouslyActiveAppObj ~= nil and currentlyActiveAppObj ~= nil) then
+        print(" ")
+        print("previouslyActiveAppObj=" .. previouslyActiveAppObj:name())
+        print("currentlyActiveAppObj=" .. currentlyActiveAppObj:name())
+        print("Shifting... ")
+        print(" ")
+    end
+
+    if (appObject:name() ~= "Hammerspoon" and not appObject:name():find("GoToMeeting")) then
+        previouslyActiveAppObj = currentlyActiveAppObj
+        currentlyActiveAppObj = appObject
+    end
   end
 end
 appWatcher = hs.application.watcher.new(applicationWatcher)
