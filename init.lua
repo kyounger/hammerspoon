@@ -36,19 +36,21 @@ function applicationWatcher(appName, eventType, appObject)
 
     if(previouslyActiveAppObj ~= nil and currentlyActiveAppObj ~= nil) then
         print(" ")
-        if(previouslyActiveAppObj ~= nil) then
+        if(previouslyActiveAppObj ~= nil and previouslyActiveAppObj:name() ~= nil) then
             print("previouslyActiveAppObj=" .. previouslyActiveAppObj:name())
         end
-        if(currentlyActiveAppObj ~= nil) then
+        if(currentlyActiveAppObj ~= nil and currentlyActiveAppObj:name() ~= nil) then
             print("currentlyActiveAppObj=" .. currentlyActiveAppObj:name())
         end
         print("Shifting... ")
         print(" ")
     end
 
-    if (appObject:name() ~= "Hammerspoon" and not appObject:name():find("GoToMeeting")) then
-        previouslyActiveAppObj = currentlyActiveAppObj
-        currentlyActiveAppObj = appObject
+    if(appObject:name() ~= nil) then
+        if (appObject:name() ~= "Hammerspoon" and not appObject:name():find("GoToMeeting")) then
+            previouslyActiveAppObj = currentlyActiveAppObj
+            currentlyActiveAppObj = appObject
+        end
     end
   end
 end
