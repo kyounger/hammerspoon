@@ -36,8 +36,12 @@ function applicationWatcher(appName, eventType, appObject)
 
     if(previouslyActiveAppObj ~= nil and currentlyActiveAppObj ~= nil) then
         print(" ")
-        print("previouslyActiveAppObj=" .. previouslyActiveAppObj:name())
-        print("currentlyActiveAppObj=" .. currentlyActiveAppObj:name())
+        if(previouslyActiveAppObj ~= nil) then
+            print("previouslyActiveAppObj=" .. previouslyActiveAppObj:name())
+        end
+        if(currentlyActiveAppObj ~= nil) then
+            print("currentlyActiveAppObj=" .. currentlyActiveAppObj:name())
+        end
         print("Shifting... ")
         print(" ")
     end
