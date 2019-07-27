@@ -1,3 +1,5 @@
+local pprint = require('pprint')
+
 hs.logger.defaultLogLevel="info"
 
 -- Misc setup
@@ -160,6 +162,11 @@ hs.fnutils.each(finderKeyList, function(entry)
 end)
 
 finderMode:bind('', 'escape', function() finderMode:exit() end)
+
+
+-- switch output devices quickly with keyboard
+local toggleAudioOutput = require("audio_output_toggle")
+hs.hotkey.bind(modShiftHyper, "a", toggleAudioOutput)
 
 -- let me know when you're done loading all this stuff
 hs.notify.new( {title='Hammerspoon', subTitle='Configuration loaded'} ):send()
