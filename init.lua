@@ -22,30 +22,37 @@ hs.loadSpoon("SpoonInstall")
 spoon.SpoonInstall.use_syncinstall = true
 Install=spoon.SpoonInstall
 
--- Load Seal - This is a pretty simple implementation of something like Alfred
-Install:andUse("Seal")
-spoon.Seal:loadPlugins({"apps"})
-spoon.Seal:bindHotkeys({show={{"cmd"}, "Space"}})
-spoon.Seal:start()
+-- -- Load Seal - This is a pretty simple implementation of something like Alfred
+-- Install:andUse("Seal")
+-- spoon.Seal:loadPlugins({"apps"})
+-- spoon.Seal:bindHotkeys({show={{"cmd"}, "Space"}})
+-- spoon.Seal:start()
 
 -- cmd-tab replacement
 currentlyActiveAppObj = nil
 previouslyActiveAppObj = nil
 
+local debugMode = false
+function printIfDebug(o)
+    if(debugMode) then
+        print(o)
+    end
+end
+
 function applicationWatcher(appName, eventType, appObject)
   if (eventType == hs.application.watcher.activated) then
-    print("application watcher: appObject=" .. appObject:name())
+    printIfDebug("application watcher: appObject=" .. appObject:name())
 
     if(previouslyActiveAppObj ~= nil and currentlyActiveAppObj ~= nil) then
-        print(" ")
+        printIfDebug(" ")
         if(previouslyActiveAppObj ~= nil and previouslyActiveAppObj:name() ~= nil) then
-            print("previouslyActiveAppObj=" .. previouslyActiveAppObj:name())
+            printIfDebug("previouslyActiveAppObj=" .. previouslyActiveAppObj:name())
         end
         if(currentlyActiveAppObj ~= nil and currentlyActiveAppObj:name() ~= nil) then
-            print("currentlyActiveAppObj=" .. currentlyActiveAppObj:name())
+            printIfDebug("currentlyActiveAppObj=" .. currentlyActiveAppObj:name())
         end
-        print("Shifting... ")
-        print(" ")
+        printIfDebug("Shifting... ")
+        printIfDebug(" ")
     end
 
     if(appObject:name() ~= nil) then
@@ -59,13 +66,6 @@ end
 appWatcher = hs.application.watcher.new(applicationWatcher)
 appWatcher:start()
 
--- this is actually bound to cmd-tab in BTT
-hs.hotkey.bind(modAlt, 'tab', function() 
-    if(previouslyActiveAppObj ~= nil) then
-        previouslyActiveAppObj:activate()
-    end
-end)
-
 --clipboard history (only text)
 Install:andUse("TextClipboardHistory", {
     disable = false,
@@ -77,6 +77,10 @@ Install:andUse("TextClipboardHistory", {
     },
     start = true,
 })
+
+hs.hotkey.bind(modShiftHyper, "R", function()
+  hs.reload()
+end)
 
 ----not working yet
 ----emoji
@@ -164,9 +168,39 @@ end)
 finderMode:bind('', 'escape', function() finderMode:exit() end)
 
 
+
+--menubar audio device
+-- local audioDeviceMenubar = hs.menubar.new()
+-- function setAudioDeviceDisplay(state)
+--     if state then
+--         audioDeviceMenubar:setTitle("")
+--     else
+--         audioDeviceMenubar:setTitle("💤")
+--     end
+-- end
+-- caffeineMenubar:setClickCallback(function()
+--     setCaffeineDisplay(hs.caffeinate.toggle("displayIdle"))
+-- end)
+-- setCaffeineDisplay(hs.caffeinate.get("displayIdle"))
+
+
 -- switch output devices quickly with keyboard
 local toggleAudioOutput = require("audio_output_toggle")
 hs.hotkey.bind(modShiftHyper, "a", toggleAudioOutput)
+
+
+function ensureGtmMenuItemIsUnchecked()
+    local gtm = hs.application.find("GoToMeeting")
+    if(gtm ~= nil) then
+        local menuItemString = "Attendees Can Chat"
+        local menuItem = gtm:findMenuItem(menuItemString)
+
+        if(menuItem['ticked']) then
+            gtm:selectMenuItem(menuItemString, false)
+        end
+    end
+end
+hs.hotkey.bind(modHyper, 'U', ensureGtmMenuItemIsUnchecked)
 
 -- let me know when you're done loading all this stuff
 hs.notify.new( {title='Hammerspoon', subTitle='Configuration loaded'} ):send()
