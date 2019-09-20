@@ -6,7 +6,6 @@ hs.logger.defaultLogLevel="info"
 hs.window.animationDuration = 0
 local vw = hs.inspect.inspect
 local configFileWatcher = nil
-local appWatcher = nil
 
 -- Keyboard modifiers, Capslock bound to escape when a single keyup/down, but used as a modifier cmd+alt+ctrl (via Karabiner Elements)
 local modNone  = {""}
@@ -28,10 +27,6 @@ Install=spoon.SpoonInstall
 -- spoon.Seal:bindHotkeys({show={{"cmd"}, "Space"}})
 -- spoon.Seal:start()
 
--- cmd-tab replacement
-currentlyActiveAppObj = nil
-previouslyActiveAppObj = nil
-
 local debugMode = false
 function printIfDebug(o)
     if(debugMode) then
@@ -39,34 +34,53 @@ function printIfDebug(o)
     end
 end
 
-function applicationWatcher(appName, eventType, appObject)
-  if (eventType == hs.application.watcher.activated) then
-    printIfDebug("application watcher: appObject=" .. appObject:name())
+----------------------------------------------------------------------------------------------------
+--
+-- appWatcher stuff
+--
+currentlyActiveAppObj = nil
+previouslyActiveAppObj = nil
 
-    if(previouslyActiveAppObj ~= nil and currentlyActiveAppObj ~= nil) then
-        printIfDebug(" ")
-        if(previouslyActiveAppObj ~= nil and previouslyActiveAppObj:name() ~= nil) then
-            printIfDebug("previouslyActiveAppObj=" .. previouslyActiveAppObj:name())
-        end
-        if(currentlyActiveAppObj ~= nil and currentlyActiveAppObj:name() ~= nil) then
-            printIfDebug("currentlyActiveAppObj=" .. currentlyActiveAppObj:name())
-        end
-        printIfDebug("Shifting... ")
-        printIfDebug(" ")
-    end
-
-    if(appObject:name() ~= nil) then
-        if (appObject:name() ~= "Hammerspoon" and not appObject:name():find("GoToMeeting")) then
-            previouslyActiveAppObj = currentlyActiveAppObj
-            currentlyActiveAppObj = appObject
-        end
-    end
-  end
+function gtmToolbarMonitor(appName, eventType, appObject)
+    local windowTitles={"Waiting to view *'s screen", "Now viewing *'s screen"}
 end
-appWatcher = hs.application.watcher.new(applicationWatcher)
+
+function prevCurrHandler(appName, eventType, appObject)
+    if (eventType == hs.application.watcher.activated) then
+        printIfDebug("application watcher: appObject=" .. appObject:name())
+
+        if(previouslyActiveAppObj ~= nil and currentlyActiveAppObj ~= nil) then
+            printIfDebug(" ")
+            if(previouslyActiveAppObj ~= nil and previouslyActiveAppObj:name() ~= nil) then
+                printIfDebug("previouslyActiveAppObj=" .. previouslyActiveAppObj:name())
+            end
+            if(currentlyActiveAppObj ~= nil and currentlyActiveAppObj:name() ~= nil) then
+                printIfDebug("currentlyActiveAppObj=" .. currentlyActiveAppObj:name())
+            end
+            printIfDebug("Shifting... ")
+            printIfDebug(" ")
+        end
+
+        if(appObject:name() ~= nil) then
+            if (appObject:name() ~= "Hammerspoon" and not appObject:name():find("GoToMeeting")) then
+                previouslyActiveAppObj = currentlyActiveAppObj
+                currentlyActiveAppObj = appObject
+            end
+        end
+    end
+end
+
+function applicationWatcher(appName, eventType, appObject)
+    prevCurrHandler(appName, eventType, appObject)
+    gtmToolbarMonitor(appName, eventType, appObject)
+end
+local appWatcher = hs.application.watcher.new(applicationWatcher)
 appWatcher:start()
 
---clipboard history (only text)
+----------------------------------------------------------------------------------------------------
+--
+-- clipboard history (only text)
+--
 Install:andUse("TextClipboardHistory", {
     disable = false,
     config = {
@@ -192,7 +206,7 @@ hs.hotkey.bind(modShiftHyper, "a", toggleAudioOutput)
 function ensureGtmMenuItemIsUnchecked()
     local gtm = hs.application.find("GoToMeeting")
     if(gtm ~= nil) then
-        local menuItemString = "Attendees Can Chat"
+        local menuItemString = "Show Toolbar"
         local menuItem = gtm:findMenuItem(menuItemString)
 
         if(menuItem['ticked']) then
