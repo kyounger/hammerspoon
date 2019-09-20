@@ -209,8 +209,10 @@ function ensureGtmMenuItemIsUnchecked()
         local menuItemString = "Show Toolbar"
         local menuItem = gtm:findMenuItem(menuItemString)
 
-        if(menuItem['ticked']) then
-            gtm:selectMenuItem(menuItemString, false)
+        if(menuItem['enabled']) then
+            if(menuItem['ticked']) then
+                gtm:selectMenuItem(menuItemString, false)
+            end
         end
     end
 end
