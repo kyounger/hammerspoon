@@ -17,7 +17,7 @@ local modShiftHyper = {"⌘", "⌥", "⌃", "⇧"}
 
 -- anycomplete init
 local anycomplete = require "anycomplete/anycomplete"
-anycomplete.registerDefaultBindings(modHyper, 'A')
+anycomplete.registerDefaultBindings(modHyper, 'space')
 
 local rawFile = file.read(os.getenv("HOME") .. "/.local/anycomplete-custom-words.txt")
 local customWords = stringx.splitlines(rawFile)
