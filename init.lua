@@ -99,8 +99,83 @@ Install:andUse("TextClipboardHistory", {
     start = true,
 })
 
+-- hot reload config
 hs.hotkey.bind(modShiftHyper, "R", function()
   hs.reload()
+end)
+
+local ffmpegCmdPid=nil
+hs.hotkey.bind(modShiftHyper, "W", function()
+  -- Sorta pulled from here, not working yet: https://github.com/Hammerspoon/hammerspoon/issues/1808
+  -- local tracking = false
+  -- local events = eventtap.event.types
+  -- local mouseMoveTracker = hs.eventtap.new({ events.leftMouseDragged, events.leftMouseUp }, function(e)
+  --   if e:getType() == events.leftMouseUp then
+  --     mouseMoveTracker:stop()
+  --     mouseMoveTracker = nil
+  --     tracking = false
+  --   elseif e:getType() == events.leftMouseDragged then
+  --     tracking = true
+  --   end
+  -- end, false)
+  -- mouseMoveTracker:start()
+
+  local startingMousePosition = hs.mouse.getAbsolutePosition()
+  local max = hs.screen.mainScreen():fullFrame()
+  local maxCanvas = hs.canvas.new{x=max.x, y=max.y, h=max.h, w=max.w}
+  maxCanvas:clickActivating(false)
+  maxCanvas:canvasMouseEvents(true, true, false, true)
+  maxCanvas:mouseCallback(function(_, event, id, x, y)
+    local currentMousePosition = hs.mouse.getAbsolutePosition()
+    if event == "mouseMove" then
+      -- if tracking then
+        maxCanvas:replaceElements({
+          type="rectangle",
+          action="stroke",
+          strokeWidth=2.0,
+          strokeColor= {green=1.0},
+          frame = {
+            x=startingMousePosition.x,
+            y=startingMousePosition.y,
+            h=(currentMousePosition.y-startingMousePosition.y),
+            w=(currentMousePosition.x-startingMousePosition.x)
+          },
+        })
+      -- end
+    -- elseif event == "mouseDown" then
+      -- tracking=true
+    elseif event == "mouseUp" then
+      --w:h:x:y
+      x=math.floor(startingMousePosition.x)
+      y=math.floor(startingMousePosition.y)
+      h=math.floor((currentMousePosition.y-startingMousePosition.y))
+      w=math.floor((currentMousePosition.x-startingMousePosition.x))
+      dimensions=(w .. ":" .. h .. ":" ..  x .. ":" .. y)
+
+      local filename = os.date("screen%Y%m%d-%H%M%S")
+      local cmd='/usr/local/bin/ffmpeg -f avfoundation -i 5: -filter:v crop='..dimensions..' ~/screen-gifs/'..filename..'.gif'
+      print(cmd)
+      hs.pasteboard.setContents(cmd)
+
+      print("running:")
+      local applescript = 'do shell script "'..cmd..' > /dev/null 2>&1 & echo $!"'
+      local b, o, d = hs.applescript(applescript)
+      print(hs.inspect(o))
+      ffmpegCmdPid=o
+
+      maxCanvas:delete()
+    end
+  end)
+  maxCanvas:level("dragging")
+  maxCanvas:show()
+end)
+
+hs.hotkey.bind(modShiftHyper, "E", function()
+  local cmd = 'kill -2 '..ffmpegCmdPid
+  local applescript = 'do shell script "'..cmd..' > /dev/null 2>&1 & echo $!"'
+  print("running:")
+  print(applescript)
+  local b, o, d = hs.applescript(applescript)
 end)
 
 ----not working yet
