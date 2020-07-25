@@ -227,3 +227,7 @@ hs.hotkey.bind(modHyper, 'U', ensureGtmMenuItemIsUnchecked)
 
 -- let me know when you're done loading all this stuff
 hs.notify.new( {title='Hammerspoon', subTitle='Configuration loaded'} ):send()
+
+
+-- defeat paste blockers
+hs.hotkey.bind(modShiftHyper, "V", function() hs.eventtap.keyStrokes(hs.pasteboard.getContents()) end)
