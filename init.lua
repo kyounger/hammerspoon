@@ -1,4 +1,5 @@
-require 'pl'
+-- https://github.com/Hammerspoon/hammerspoon/issues/363#issuecomment-764887739
+require("pl")
 
 hs.logger.defaultLogLevel="info"
 
@@ -153,7 +154,7 @@ hs.hotkey.bind(modShiftHyper, "W", function()
       dimensions=(w .. ":" .. h .. ":" ..  x .. ":" .. y)
 
       local filename = os.date("screen%Y%m%d-%H%M%S")
-      local cmd='/usr/local/bin/ffmpeg -f avfoundation -i 5: -filter:v crop='..dimensions..' ~/screen-gifs/'..filename..'.gif'
+      local cmd='/usr/local/bin/ffmpeg -f avfoundation -capture_cursor 1 -i 5: -filter:v crop='..dimensions..' ~/screen-gifs/'..filename..'.gif'
       print(cmd)
       hs.pasteboard.setContents(cmd)
 
