@@ -249,6 +249,7 @@ end
 
 finderKeyList = {
     { key='d', dir="/Users/kyounger/Desktop" },
+    { key='e', dir="/Users/kyounger/Desktop/ebird" },
     { key='j', dir="/Users/kyounger/Downloads" },
     { key='a', dir="/Applications" },
 }
