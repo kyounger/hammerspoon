@@ -16,14 +16,6 @@ local modShift = {"⇧"}
 local modHyper = {"⌘", "⌥", "⌃"}
 local modShiftHyper = {"⌘", "⌥", "⌃", "⇧"}
 
--- anycomplete init
-local anycomplete = require "anycomplete/anycomplete"
-anycomplete.registerDefaultBindings(modHyper, 'space')
-
-local rawFile = file.read(os.getenv("HOME") .. "/.local/anycomplete-custom-words.txt")
-local customWords = stringx.splitlines(rawFile)
-anycomplete.registerCustomWords(customWords)
-
 -- Load InstallSpoon and use it to load all the other spoons
 hs.loadSpoon("SpoonInstall")
 spoon.SpoonInstall.use_syncinstall = true
